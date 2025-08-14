@@ -2,10 +2,10 @@ calibration/*
 !calibration/calib_data.npz
 
 capture/*
-capture/.gitkeep
+!capture/.gitkeep
 
 find_pose/*
-find_pose/.gitkeep
+!find_pose/.gitkeep
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
