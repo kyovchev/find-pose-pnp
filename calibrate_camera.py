@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from oakd_camera import OAKDCamera
 
 # Params
 CHESSBOARD = (8, 6)  # internal corners (cols, rows)
@@ -7,6 +8,7 @@ SQUARE_SIZE = 25.0   # square size (mm)
 MIN_SAMPLES = 12     # min samples
 SAVE_PATH = "calib_data.npz"
 DEVICE_ID = 0        # camera ID
+OAK_D = True
 
 # 3D points
 objp = np.zeros((CHESSBOARD[1] * CHESSBOARD[0], 3), np.float32)
@@ -18,7 +20,12 @@ imgpoints = []
 
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 1e-3)
 
-cap = cv2.VideoCapture(DEVICE_ID)
+if OAK_D:
+    cap = OAKDCamera(rgb_resolution="4K", fps=30, preview_size=(3840, 2160))
+    cap.open()
+else:
+    cap = cv2.VideoCapture(DEVICE_ID)
+
 if not cap.isOpened():
     print(f'Cannot open device with ID: {DEVICE_ID}')
     exit()
@@ -73,6 +80,9 @@ while True:
         display = cv2.resize(undistorted, img_size)
     else:
         display = frame.copy()
+
+    if OAK_D:
+        display = cv2.resize(display, (960, 540))
 
     draw_info(display, [
         f'Frames captured: {len(objpoints)}',

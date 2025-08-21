@@ -9,3 +9,6 @@ How to run it in virtual environment:
 4. `pip install open3d`
 5. `pip install jupyterlab`
 6. `python find_pose.py`
+
+For OAK-D camera:
+1. `pip install depthai`

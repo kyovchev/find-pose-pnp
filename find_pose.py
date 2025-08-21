@@ -4,12 +4,17 @@ import traceback
 from math import atan2, degrees
 import open3d as o3d
 import threading
-
+from oakd_camera import OAKDCamera
 
 # Paras
-CALIB_FILE = './calibration/calib_data.npz'  # camera calibration
+OAK_D = True
+# CALIB_FILE = './calibration/calib_data.npz'  # camera calibration
+CALIB_FILE = './calibration/oakd/calib_data_oakd.npz'  # camera calibration
 DEVICE_ID = 0  # camera device ID
-TOP, BOTTOM, LEFT, RIGHT = 100, 420, 30, 520
+if OAK_D:
+    TOP, BOTTOM, LEFT, RIGHT = 200, 1800, 200, 3400
+else:
+    TOP, BOTTOM, LEFT, RIGHT = 100, 420, 30, 520
 THRESHOLD = 90
 MAX_IOU_ERROR = 0.05
 obj_pts = np.array([  # Plate 3
@@ -37,6 +42,12 @@ prev_tvec = None
 class CameraThread:
     def __init__(self, src=0):
         self.cap = cv2.VideoCapture(src)
+        if OAK_D:
+            self.cap = OAKDCamera(rgb_resolution="4K", fps=5,
+                                  preview_size=(3840, 2160))
+            self.cap.open()
+        else:
+            self = cv2.VideoCapture(DEVICE_ID)
         self.lock = threading.Lock()
         self.frame = None
         self.running = True
@@ -122,7 +133,10 @@ while True:
     _, binary = cv2.threshold(cropped, THRESHOLD, 255, cv2.THRESH_BINARY)
     binary = 255 - binary
 
-    cv2.imshow('binary', binary)
+    if OAK_D:
+        cv2.imshow('binary', cv2.resize(binary, (960, 540)))
+    else:
+        cv2.imshow('binary', binary)
     try:
         cnts, _ = cv2.findContours(
             binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -134,7 +148,10 @@ while True:
             contour_to_draw = approx  # shape: (N,1,2)
             contour = np.zeros(frame_grayscale.shape, dtype=np.uint8)
             cv2.drawContours(contour, [contour_to_draw], -1, 255, -1)
-            cv2.imshow('contour', contour)
+            if OAK_D:
+                cv2.imshow('contour', cv2.resize(contour, (960, 540)))
+            else:
+                cv2.imshow('contour', contour)
 
             best_error = float('inf')
             best_rvec, best_tvec = None, None
@@ -195,11 +212,11 @@ while True:
                 tx, ty, tz = tuple(point_in_cam.flatten())
                 text = f'Tvec (mm): X={tx:.1f}, Y={ty:.1f}, Z={tz:.1f}'
                 cv2.putText(processed, text, (15, 60), cv2.FONT_HERSHEY_SIMPLEX,
-                            0.6, (0, 0, 0), 2)
+                            3 if OAK_D else 0.6, (0, 0, 0), 2)
                 roll, pitch, yaw = rotationMatrixToRPY(R)
                 text = f'Tvec (mm): X={tx:.1f}, Y={ty:.1f}, Z={tz:.1f}'
                 cv2.putText(processed, f'Roll: {roll:4.0f}, Pitch: {pitch:4.0f}, Yaw: {yaw:4.0f}',
-                            (15, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
+                            (15, 150 if OAK_D else 90), cv2.FONT_HERSHEY_SIMPLEX, 3 if OAK_D else 0.6, (0, 0, 0), 2)
 
                 # Object overlay
                 img_points_proj, _ = cv2.projectPoints(
@@ -234,12 +251,18 @@ while True:
         pass
         # traceback.print_exception(x)
 
-    cv2.imshow('Processed', processed)
+    if OAK_D:
+        cv2.imshow('processed', cv2.resize(processed, (960, 540)))
+    else:
+        cv2.imshow('processed', processed)
 
     if (cv2.waitKey(1) & 0xFF) == 27:  # Esc
         break
 
     # Update Open3D
+    ctr = vis.get_view_control()
+    ctr.set_constant_z_far(1000.0)   # например до 10 метра
+    ctr.set_constant_z_near(0.01)  # например от 1 см
     vis.poll_events()
     vis.update_renderer()
 
