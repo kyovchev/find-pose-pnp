@@ -16,13 +16,19 @@ if OAK_D:
 else:
     TOP, BOTTOM, LEFT, RIGHT = 100, 420, 30, 520
 THRESHOLD = 90
-MAX_IOU_ERROR = 0.05
-obj_pts = np.array([  # Plate 3
-    [0, 0, 0],
-    [0, 35, 0],
-    [100, 35, 0],
-    [100, 19, 0],
+MAX_IOU_ERROR = 0.1
+obj_pts = np.array([  # Plate 3 3D Printed
+    [0,  0, 0],
+    [0, 50, 0],
+    [150, 50, 0],
+    [150, 25, 0],
 ], dtype=np.float32)
+# obj_pts = np.array([  # Plate 3
+#     [0, 0, 0],
+#     [0, 35, 0],
+#     [100, 35, 0],
+#     [100, 19, 0],
+# ], dtype=np.float32)
 # obj_pts = np.array([ # Plate 1
 #     [0,0, 0],
 #     [0,18, 0],
@@ -125,10 +131,10 @@ while True:
 
     processed = frame.copy()
     frame_grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    undistorted = cv2.undistort(frame_grayscale, camera_matrix, dist_coeffs)
+    # undistorted = cv2.undistort(frame_grayscale, camera_matrix, dist_coeffs)
 
-    cropped = 255 * np.ones(undistorted.shape, dtype=np.uint8)
-    cropped[TOP:BOTTOM, LEFT:RIGHT] = undistorted[TOP:BOTTOM, LEFT:RIGHT]
+    cropped = 255 * np.ones(frame_grayscale.shape, dtype=np.uint8)
+    cropped[TOP:BOTTOM, LEFT:RIGHT] = frame_grayscale[TOP:BOTTOM, LEFT:RIGHT]
 
     _, binary = cv2.threshold(cropped, THRESHOLD, 255, cv2.THRESH_BINARY)
     binary = 255 - binary
@@ -261,8 +267,8 @@ while True:
 
     # Update Open3D
     ctr = vis.get_view_control()
-    ctr.set_constant_z_far(1000.0)   # например до 10 метра
-    ctr.set_constant_z_near(0.01)  # например от 1 см
+    ctr.set_constant_z_far(1000.0)
+    ctr.set_constant_z_near(0.01)
     vis.poll_events()
     vis.update_renderer()
 
