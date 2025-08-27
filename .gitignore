@@ -1,8 +1,14 @@
 calibration/*
 !calibration/calib_data.npz
+!calibration/oakd/
+calibration/oakd/*
+!calibration/oakd/calib_data_oakd.npz
 
 capture/*
 !capture/.gitkeep
+
+undistorted/*
+!undistorted/.gitkeep
 
 find_pose/*
 !find_pose/.gitkeep
