@@ -13,6 +13,13 @@ undistorted/*
 find_pose/*
 !find_pose/.gitkeep
 
+segmentation/*
+!segmentation/.gitkeep
+
+
+*.pth
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
