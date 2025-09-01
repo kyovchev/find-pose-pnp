@@ -16,9 +16,10 @@ find_pose/*
 segmentation/*
 !segmentation/.gitkeep
 
-
 *.pth
 
+oakd_captured_depths/*
+!oakd_captured_depths/.gitkeep
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
